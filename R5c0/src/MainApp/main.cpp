@@ -75,7 +75,7 @@ static void myTask1(void* pvParameters)
   {
 	  vTaskDelay(pdMS_TO_TICKS(DELAY_1s));
 	  
-      led_status = led_status == 1? 0:1;
+      led_status = led_status == 0x2? 0:0x2;
       XGpio_DiscreteWrite(&led1_io, 1, led_status);
   }
 
@@ -90,7 +90,7 @@ static void myTask2(void* pvParameters)
   {
 	  vTaskDelay(pdMS_TO_TICKS(DELAY_5s));
 	  count++;
-	  xil_printf("Thread 2 counter value: %u \r\n", count);
+	  //xil_printf("Thread 2 counter value: %u \r\n", count);
   }
 
 }

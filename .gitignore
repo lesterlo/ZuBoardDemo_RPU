@@ -21,6 +21,7 @@ _ide/logs
 _ide/.wsdata
 
 # Customized ignore
+.vscode/
 _ide/
 .rigel_lopper/
 .cache/
