@@ -23,4 +23,5 @@ _ide/.wsdata
 # Customized ignore
 _ide/
 .rigel_lopper/
+.cache/
 platform/

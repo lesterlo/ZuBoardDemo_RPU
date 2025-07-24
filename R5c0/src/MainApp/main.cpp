@@ -1,5 +1,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
+#include <unistd.h>
 
 #include "xil_printf.h"
 #include "xparameters.h"
@@ -21,7 +22,7 @@ static TaskHandle_t th_myTask2;
 
 XGpio_Config *led1_cfg;
 XGpio led1_io;
-uint8_t led_status = 0;
+volatile uint8_t led_status = 0;
 
 
 int main( void )
@@ -34,10 +35,12 @@ int main( void )
     led1_cfg = XGpio_LookupConfig(XPAR_AXI_GPIO_0_BASEADDR);
 	int status = XGpio_CfgInitialize(&led1_io, led1_cfg, led1_cfg->BaseAddress);
     if (status != XST_SUCCESS) {
+        xil_printf( "GPIO FAILD\n" );
         return XST_FAILURE;
     }
 
     XGpio_SetDataDirection(&led1_io, 1, 0x00);
+
 
 
 	xTaskCreate(myTask1,
