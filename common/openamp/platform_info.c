@@ -13,12 +13,10 @@
 #include <metal/irq.h>
 #include <metal/utilities.h>
 #include <openamp/rpmsg_virtio.h>
+#include "FreeRTOS.h"
 #include "platform_info.h"
 #include "rsc_table.h"
-
-#ifndef RPMSG_NO_IPI
-#define _rproc_wait() __asm volatile("wfi")
-#endif
+#include "task.h"
 
 static metal_phys_addr_t poll_phys_addr = POLL_BASE_ADDR;
 struct metal_device kick_device = {
@@ -53,6 +51,16 @@ static struct remoteproc_priv rproc_priv = {
 
 static struct remoteproc rproc_inst;
 static struct rpmsg_virtio_shm_pool shpool;
+
+static void platform_idle(void)
+{
+	TickType_t delay = pdMS_TO_TICKS(1);
+
+	if (delay == 0)
+		delay = 1;
+
+	vTaskDelay(delay);
+}
 
 extern int32_t init_system(void);
 extern void cleanup_system(void);
@@ -194,14 +202,16 @@ int32_t platform_poll_on_vdev_reset(void *arg)
 		(void)flags;
 		if (metal_io_read32(prproc->kick_io, 0))
 			remoteproc_get_notification(rproc, RSC_NOTIFY_ID_ANY);
+		platform_idle();
 #else
 		flags = metal_irq_save_disable();
 		if (!(atomic_flag_test_and_set(&prproc->ipi_nokick))) {
 			metal_irq_restore_enable(flags);
 			remoteproc_get_notification(rproc, RSC_NOTIFY_ID_ANY);
+		} else {
+			metal_irq_restore_enable(flags);
+			platform_idle();
 		}
-		_rproc_wait();
-		metal_irq_restore_enable(flags);
 #endif
 	}
 
@@ -225,6 +235,7 @@ int32_t platform_poll(void *priv)
 				return ret;
 			break;
 		}
+		platform_idle();
 #else
 		flags = metal_irq_save_disable();
 		if (!(atomic_flag_test_and_set(&prproc->ipi_nokick))) {
@@ -233,9 +244,10 @@ int32_t platform_poll(void *priv)
 			if (ret != 0)
 				return ret;
 			break;
+		} else {
+			metal_irq_restore_enable(flags);
+			platform_idle();
 		}
-		_rproc_wait();
-		metal_irq_restore_enable(flags);
 #endif
 	}
 	return 0;
