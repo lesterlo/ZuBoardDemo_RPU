@@ -27,9 +27,15 @@ set(USER_UNDEFINED_SYMBOLS
 # Example 3: Adding ${CMAKE_SOURCE_DIR}/data/include to add data/include from this project.
 
 set(USER_INCLUDE_DIRECTORIES
+"../../common/include"
+"../../common/openamp"
 )
 set(USER_COMPILE_SOURCES
 "MainApp/main.cpp"
+"../../common/openamp/platform_info.c"
+"../../common/openamp/rsc_table.c"
+"../../common/openamp/helper.c"
+"../../common/openamp/zynqmp_r5_a53_rproc.c"
 )
 
 # -----------------------------------------
