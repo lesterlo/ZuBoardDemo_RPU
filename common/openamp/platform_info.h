@@ -26,7 +26,15 @@ extern "C" {
 #if defined(XPAR_XIPIPSU_0_INT_ID)
 #define IPI_IRQ_VECT_ID XPAR_XIPIPSU_0_INT_ID
 #elif defined(XPAR_XIPIPSU_0_INTR)
+/*
+ * SDT BSPs expose the raw GIC SPI number as XPAR_XIPIPSU_0_INTR. The
+ * FreeRTOS interrupt API used by libmetal expects the local interrupt vector.
+ */
+#if XPAR_XIPIPSU_0_INTR >= 32
+#define IPI_IRQ_VECT_ID (XPAR_XIPIPSU_0_INTR - 32U)
+#else
 #define IPI_IRQ_VECT_ID XPAR_XIPIPSU_0_INTR
+#endif
 #else
 #error "No XIPIPSU interrupt ID macro found"
 #endif

@@ -75,6 +75,7 @@ static uint32_t set_led_mode(uint8_t mode)
 
 static void send_response(struct rpmsg_endpoint *ept,
 			  const struct zudemo_rpu_msg_header *request,
+			  uint32_t dst,
 			  uint8_t type, uint32_t status,
 			  const void *payload, uint16_t payload_len)
 {
@@ -98,12 +99,13 @@ static void send_response(struct rpmsg_endpoint *ept,
 	if (payload_len)
 		memcpy(tx + sizeof(header), payload, payload_len);
 
-	if (rpmsg_send(ept, tx, frame_len) < 0)
+	if (rpmsg_sendto(ept, tx, frame_len, dst) < 0)
 		error_count++;
 }
 
 static void send_status(struct rpmsg_endpoint *ept,
-			const struct zudemo_rpu_msg_header *request)
+			const struct zudemo_rpu_msg_header *request,
+			uint32_t dst)
 {
 	struct zudemo_rpu_status_payload payload;
 
@@ -115,7 +117,7 @@ static void send_status(struct rpmsg_endpoint *ept,
 	payload.rx_count = rx_count;
 	payload.error_count = error_count;
 
-	send_response(ept, request, ZUD_RPU_MSG_STATUS, ZUD_RPU_STATUS_OK,
+	send_response(ept, request, dst, ZUD_RPU_MSG_STATUS, ZUD_RPU_STATUS_OK,
 		      &payload, sizeof(payload));
 }
 
@@ -124,7 +126,6 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 {
 	struct zudemo_rpu_msg_header request;
 
-	(void)src;
 	(void)priv;
 	rx_count++;
 
@@ -137,31 +138,31 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 
 	if (request.magic != ZUD_RPU_MAGIC) {
 		error_count++;
-		send_response(ept, &request, ZUD_RPU_MSG_ERROR,
+		send_response(ept, &request, src, ZUD_RPU_MSG_ERROR,
 			      ZUD_RPU_STATUS_BAD_MAGIC, NULL, 0);
 		return RPMSG_SUCCESS;
 	}
 	if (request.version != ZUD_RPU_VERSION) {
 		error_count++;
-		send_response(ept, &request, ZUD_RPU_MSG_ERROR,
+		send_response(ept, &request, src, ZUD_RPU_MSG_ERROR,
 			      ZUD_RPU_STATUS_BAD_VERSION, NULL, 0);
 		return RPMSG_SUCCESS;
 	}
 	if (request.payload_len + sizeof(request) != len ||
 	    len > ZUD_RPU_MAX_FRAME_SIZE) {
 		error_count++;
-		send_response(ept, &request, ZUD_RPU_MSG_ERROR,
+		send_response(ept, &request, src, ZUD_RPU_MSG_ERROR,
 			      ZUD_RPU_STATUS_BAD_LENGTH, NULL, 0);
 		return RPMSG_SUCCESS;
 	}
 
 	switch (request.type) {
 	case ZUD_RPU_MSG_PING:
-		send_response(ept, &request, ZUD_RPU_MSG_PONG,
+		send_response(ept, &request, src, ZUD_RPU_MSG_PONG,
 			      ZUD_RPU_STATUS_OK, NULL, 0);
 		break;
 	case ZUD_RPU_MSG_GET_STATUS:
-		send_status(ept, &request);
+		send_status(ept, &request, src);
 		break;
 	case ZUD_RPU_MSG_SET_LED: {
 		struct zudemo_rpu_led_payload payload;
@@ -169,25 +170,25 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 
 		if (request.payload_len != sizeof(payload)) {
 			error_count++;
-			send_response(ept, &request, ZUD_RPU_MSG_ERROR,
+			send_response(ept, &request, src, ZUD_RPU_MSG_ERROR,
 				      ZUD_RPU_STATUS_BAD_PAYLOAD, NULL, 0);
 			break;
 		}
 		memcpy(&payload, (uint8_t *)data + sizeof(request), sizeof(payload));
 		status = set_led_mode(payload.mode);
 		if (status == ZUD_RPU_STATUS_OK) {
-			send_response(ept, &request, ZUD_RPU_MSG_ACK,
+			send_response(ept, &request, src, ZUD_RPU_MSG_ACK,
 				      ZUD_RPU_STATUS_OK, NULL, 0);
 		} else {
 			error_count++;
-			send_response(ept, &request, ZUD_RPU_MSG_ERROR,
+			send_response(ept, &request, src, ZUD_RPU_MSG_ERROR,
 				      status, NULL, 0);
 		}
 		break;
 	}
 	default:
 		error_count++;
-		send_response(ept, &request, ZUD_RPU_MSG_ERROR,
+		send_response(ept, &request, src, ZUD_RPU_MSG_ERROR,
 			      ZUD_RPU_STATUS_BAD_TYPE, NULL, 0);
 		break;
 	}
