@@ -26,3 +26,8 @@ _ide/
 .rigel_lopper/
 .cache/
 platform/
+
+# Vitis regenerates these with machine-local absolute paths.
+R5c*/compile_commands.json
+R5c*/src/compile_commands.json
+R5c*/src/app.yaml
