@@ -23,8 +23,13 @@ MEMORY
 }
 
 /* Specify the default entry point to the program */
+/* Must be _vector_table (0x0) for remoteproc/PM boot: the zynqmp_r5_remoteproc
+ * driver passes the ELF entry point to the PM firmware as the RPU boot vector,
+ * which only accepts LOVEC (0x0) or HIVEC (0xFFFF0000). ENTRY(_boot) yields entry
+ * 0x3c -> "failed to set RPU Boot address 0x3c" / err -22. The 0x0 reset vector
+ * already branches to _boot. */
 
-ENTRY(_boot)
+ENTRY(_vector_table)
 
 /* Define the sections, and where they are mapped in memory */
 
