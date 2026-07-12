@@ -9,7 +9,7 @@ project(${APP_NAME})
 
 find_package(common)
 enable_language(C ASM CXX)
-collect(PROJECT_LIB_DEPS xilstandalone;xiltimer;open_amp;metal;xilmailbox;freertos;m)
+collect(PROJECT_LIB_DEPS xilstandalone;xiltimer;metal;open_amp;xilmailbox;freertos;m)
 collect(PROJECT_LIB_DEPS xil)
 collect(PROJECT_LIB_DEPS gcc)
 collect(PROJECT_LIB_DEPS c)

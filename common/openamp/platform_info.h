@@ -18,6 +18,14 @@
 #include "xparameters.h"
 #include "xreg_cortexr5.h"
 
+/*
+ * The channel memory map and IPI wiring are generated from the same domain
+ * YAML as the Linux device tree. Each R5 build must include its own header.
+ */
+#ifdef _AMD_GENERATED_
+#include "amd_platform_info.h"
+#endif
+
 #if defined __cplusplus
 extern "C" {
 #endif
@@ -50,39 +58,41 @@ extern "C" {
 #endif
 #endif
 
-#ifndef IPI_CHN_BITMASK
-#define IPI_CHN_BITMASK 0x01000000u
-#endif
-
 #if XPAR_CPU_ID == 0
 #define ZUDEMO_RPU_CORE_ID 0u
 #define ZUDEMO_RPU_SERVICE_NAME "mncos-r5c0-ctrl"
 #define ZUDEMO_RPU_LED_MASK 0x02u
 #define ZUDEMO_RPU_HEARTBEAT_PERIOD_MS 1000u
-#ifndef SHARED_MEM_PA
-#define SHARED_MEM_PA 0x09860000UL
-#endif
 #elif XPAR_CPU_ID == 1
 #define ZUDEMO_RPU_CORE_ID 1u
 #define ZUDEMO_RPU_SERVICE_NAME "mncos-r5c1-ctrl"
 #define ZUDEMO_RPU_LED_MASK 0x01u
 #define ZUDEMO_RPU_HEARTBEAT_PERIOD_MS 2000u
-#ifndef SHARED_MEM_PA
-#define SHARED_MEM_PA 0x09e60000UL
-#endif
 #else
 #error "Unsupported RPU CPU ID"
+#endif
+
+/*
+ * Do not fall back to hand-maintained channel values. A stale value here can
+ * corrupt the rpmsg channel when it differs from Linux reserved memory.
+ */
+#ifndef IPI_CHN_BITMASK
+#error "IPI_CHN_BITMASK missing: run scripts/gen_openamp_channel_headers.sh and build with -D_AMD_GENERATED_"
+#endif
+
+#ifndef SHARED_MEM_PA
+#error "SHARED_MEM_PA missing: run scripts/gen_openamp_channel_headers.sh and build with -D_AMD_GENERATED_"
 #endif
 
 #define KICK_DEV_NAME "poll_dev"
 #define KICK_BUS_NAME "generic"
 
 #ifndef SHARED_MEM_SIZE
-#define SHARED_MEM_SIZE 0x48000UL
+#error "SHARED_MEM_SIZE missing: run scripts/gen_openamp_channel_headers.sh and build with -D_AMD_GENERATED_"
 #endif
 
 #ifndef SHARED_BUF_OFFSET
-#define SHARED_BUF_OFFSET 0x8000UL
+#error "SHARED_BUF_OFFSET missing: run scripts/gen_openamp_channel_headers.sh and build with -D_AMD_GENERATED_"
 #endif
 
 struct remoteproc_priv {
