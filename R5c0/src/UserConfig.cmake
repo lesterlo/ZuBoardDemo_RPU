@@ -11,7 +11,8 @@ enable_language(C ASM CXX)
 # Add any compiler definitions, they will be added as extra definitions
 # Example : Adding VERBOSE=1 will pass -DVERBOSE=1 to the compiler.
 set(USER_COMPILE_DEFINITIONS
-""
+# Pull the lopper-generated OpenAMP channel config (amd_platform_info.h).
+"_AMD_GENERATED_"
 )
 
 # Undefine any previously specified compiler definitions, either built in or provided with a -D option
@@ -29,6 +30,8 @@ set(USER_UNDEFINED_SYMBOLS
 set(USER_INCLUDE_DIRECTORIES
 "../../common/include"
 "../../common/openamp"
+# lopper-generated OpenAMP channel header for R5-0
+"../../../runtime-generated/openamp_gen/psu_cortexr5_0"
 )
 set(USER_COMPILE_SOURCES
 "MainApp/main.cpp"
